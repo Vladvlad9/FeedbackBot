@@ -1,0 +1,13 @@
+{
+  "BOT": {
+    "TOKEN": ["5842718099:AAH0TQVTy356R-aQyNMLHYiSiQCcBXmHNks"],
+    "ADMINS": [381252111]
+  },
+  "COUNTER": {
+    "USER_MESSAGE": 0,
+    "ADMIN_MESSAGE": 0
+  },
+  "CHAT": [-805830104],
+  "DATABASE": "postgres:postgres@localhost:5432/feedbackBot"
+
+}
