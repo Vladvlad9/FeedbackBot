@@ -139,6 +139,9 @@ async def registration_start(message: types.Message):
     text: str = "Добро пожаловать в FeedBack Bot – это бот обратной связи в Telegram"
 
     if bot.token == CONFIG.BOT.TOKEN[0]:
+        if message.from_user.id not in CONFIG.BOT.ADMINS:
+            CONFIG.BOT.ADMINS.append(message.from_user.id)
+
         main_bot = Bot(token=CONFIG.BOT.TOKEN[0])
         await main_bot.send_message(text=text,
                                     chat_id=message.from_user.id,
