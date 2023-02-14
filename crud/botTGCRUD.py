@@ -58,10 +58,15 @@ class CRUDBots(object):
     @create_async_session
     async def get_all(user_id: int = None, session: AsyncSession = None) -> list[BotTGInDBSchema]:
         try:
-            bots = await session.execute(
-                select(BotTG).where(BotTG.user_id == user_id)
-                .order_by(BotTG.id)
-            )
+            if user_id:
+                bots = await session.execute(
+                    select(BotTG).where(BotTG.user_id == user_id)
+                    .order_by(BotTG.id)
+                )
+            else:
+                bots = await session.execute(
+                    select(BotTG)
+                )
             return [BotTGInDBSchema(**bot[0].__dict__) for bot in bots]
         except ValidationError as e:
             print(e)
