@@ -64,12 +64,16 @@ async def stop_bot(
 async def add_chat(message: types.Message):
     if message.new_chat_members[0].is_bot:
         get_bot = await CRUDBots.get(bot_id=message.new_chat_members[0].id)
+        get_chat = await CRUDChats.get(bot_id=get_bot.bot_id)
         if get_bot:
-            get_chat = await CRUDChats.add(chat=ChatSchema(chat_id=message.chat.id,
-                                                           bot_id=int(get_bot.bot_id))
-                                           )
-            CONFIG.CHAT.append(str(message.chat.id))
-            print("asd")
+            if get_chat:
+                get_chat.chat_id = message.chat.id
+                await CRUDChats.update(chat=get_chat)
+            else:
+                await CRUDChats.add(chat=ChatSchema(chat_id=message.chat.id,
+                                                    bot_id=int(get_bot.bot_id))
+                                    )
+                CONFIG.CHAT.append(str(message.chat.id))
         else:
             await message.answer("Please provide bot")
 
@@ -90,7 +94,7 @@ async def add_bot(
 ):
     bot = Bot.get_current()
     if bot.token == CONFIG.BOT.TOKEN[0]:
-        if message.from_user.id == CONFIG.BOT.ADMINS[0]:
+        if message.from_user.id in CONFIG.BOT.ADMINS:
             if command.args:
                 try:
                     bot = Bot(command.args)
@@ -165,11 +169,20 @@ async def echo(message: types.Message):
         if not user.ban:
             if not message.reply_to_message:
                 if user:
-                    current_bot = Bot(token=get_bot.bot_token)
-                    await current_bot.forward_message(chat_id=chat.chat_id,
-                                                      from_chat_id=message.from_user.id,
-                                                      message_id=message.message_id)
-                    CONFIG.COUNTER.USER_MESSAGE += 1
+                    if user.chat_id == 1:
+                        user.chat_id = chat.chat_id
+                        await CRUDUsers.update(user=user)
+
+                        current_bot = Bot(token=get_bot.bot_token)
+                        await current_bot.forward_message(chat_id=chat.chat_id,
+                                                          from_chat_id=message.from_user.id,
+                                                          message_id=message.message_id)
+                    else:
+                        current_bot = Bot(token=get_bot.bot_token)
+                        await current_bot.forward_message(chat_id=chat.chat_id,
+                                                          from_chat_id=message.from_user.id,
+                                                          message_id=message.message_id)
+                        CONFIG.COUNTER.USER_MESSAGE += 1
                 else:
                     await message.answer(text="Пользователя не найдено")
             else:
