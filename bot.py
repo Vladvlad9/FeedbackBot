@@ -20,7 +20,7 @@ from loader import dp
 logger = logging.getLogger(__name__)
 
 
-bots = [Bot(token) for token in CONFIG.BOT.TOKEN]
+
 
 
 async def set_commands(bot: Bot):
@@ -227,6 +227,7 @@ async def main():
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
     from handlers import dp
+    polling_manager = PollingManager()
     # dp.startup.register(on_startup)
     # dp.shutdown.register(on_shutdown)
 
@@ -237,8 +238,11 @@ async def main():
     # dp.include_router(user_router)
     # dp.include_router(admin_router1)
 
-    polling_manager = PollingManager()
+    get_tokens = await CRUDBots.get_all()
+    for token in get_tokens:
+        CONFIG.BOT.TOKEN.append(token.bot_token)
 
+    bots = [Bot(token) for token in CONFIG.BOT.TOKEN]
     for bot in bots:
         await bot.get_updates(offset=-1)
 
