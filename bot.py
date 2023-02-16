@@ -82,6 +82,13 @@ async def add_welcome_txt(message: Message, state: FSMContext) -> None:
                              )
 
 
+@dp.message(UserStates.Newsletters)
+async def NewslettersBot_txt(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    txt = message.text
+    await state.clear()
+
+
 @dp.message(content_types=["new_chat_members"])
 async def add_chat(message: types.Message):
     if message.new_chat_members[0].is_bot:
