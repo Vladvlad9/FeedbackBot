@@ -155,6 +155,18 @@ async def add_bot(
         await message.answer("Нет")
 
 
+@dp.message(commands=["ban"])
+async def ban_user(message: types.Message):
+    if message.reply_to_message:
+        user = await CRUDUsers.get(user_id=message.from_user.id)
+        if user:
+            user.ban = True
+            await CRUDUsers.update(user=user)
+            await message.answer(text="Пользователь забанен")
+        else:
+            await message.answer(text="Такого пользователя не существует")
+
+
 @dp.message(commands=["start"])
 async def registration_start(message: types.Message):
     bot = Bot.get_current()
