@@ -4,8 +4,9 @@ from typing import List
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters.command import Command, CommandObject
+from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramUnauthorizedError
-from aiogram.types import BotCommand, BotCommandScopeDefault
+from aiogram.types import BotCommand, BotCommandScopeDefault, Message
 from aiogram.utils.markdown import html_decoration as fmt
 from aiogram.utils.token import TokenValidationError
 
@@ -16,6 +17,7 @@ from keyboards.inline.users.formMain import MyCallback
 from polling_manager import PollingManager
 from schemas import BotTGSchema, ChatSchema, UserSchema
 from loader import dp
+from states.users.mainState import UserStates
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,26 @@ async def stop_bot(
             await message.answer(fmt.quote(f"{type(err).__name__}: {str(err)}"))
     else:
         await message.answer("Please provide bot id")
+
+
+@dp.message(UserStates.AddWelcomeTxt)
+async def add_welcome_txt(message: Message, state: FSMContext) -> None:
+    try:
+        data = await state.get_data()
+        get_bot = await CRUDBots.get(id=int(data["any_bot_id"]))
+        get_bot.welcome_text = message.text
+        await CRUDBots.update(bot=get_bot)
+        await message.answer(text="Стартовый текст успешно изменен на\n\n"
+                                  f"{message.text}",
+                             reply_markup=await MyCallback.main_menu_ikb(user_id=message.from_user.id)
+                             )
+        await state.clear()
+    except Exception as e:
+        print(e)
+        await message.answer(text="Возникла ошибка при изменении текста\n\n"
+                                  "Попробуйте еще раз добавить тест",
+                             reply_markup=await MyCallback.main_menu_ikb(user_id=message.from_user.id)
+                             )
 
 
 @dp.message(content_types=["new_chat_members"])
@@ -148,18 +170,26 @@ async def registration_start(message: types.Message):
                                     reply_markup=await MyCallback.main_menu_ikb(user_id=message.from_user.id))
     else:
         get_chat_bot = await CRUDChats.get(bot_id=bot.id)
-        user = await CRUDUsers.get(user_id=message.from_user.id)
-        if get_chat_bot is None:
+        if get_chat_bot.chat_id == 1:
             await message.answer(text="Данный бот не добавлен ни в один чат")
         else:
-            if user:
-                await message.answer(text=text)
+            user = await CRUDUsers.get(user_id=message.from_user.id)
+            if get_chat_bot is None:
+                await message.answer(text="Данный бот не добавлен ни в один чат")
             else:
-                await CRUDUsers.add(user=UserSchema(user_id=message.from_user.id,
-                                                    chat_id=int(get_chat_bot.chat_id)
-                                                    )
-                                    )
-                await message.answer(text=text)
+                if user:
+                    welcome_txt = await CRUDBots.get(bot_id=bot.id)
+                    if welcome_txt.welcome_text == "None":
+                        await message.answer(text=text)
+                    else:
+                        await message.answer(text=welcome_txt.welcome_text)
+                else:
+                    await CRUDUsers.add(user=UserSchema(user_id=message.from_user.id,
+                                                        chat_id=int(get_chat_bot.chat_id),
+                                                        use_bot_id=int(bot.id)
+                                                        )
+                                        )
+                    await message.answer(text=text)
 
 
 @dp.message(content_types="any")
