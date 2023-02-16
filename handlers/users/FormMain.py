@@ -1,13 +1,16 @@
 from aiogram import F, types, Bot
+from aiogram.dispatcher.fsm.context import FSMContext
+from aiogram.types import Message
 
 from config import CONFIG
 from crud import CRUDUsers, CRUDBots, CRUDChats
 from keyboards.inline.users.formMain import MyCallback
 from loader import dp
+from states.users.mainState import UserStates
 
 
 @dp.callback_query(MyCallback.filter())
-async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback):
+async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback, state: FSMContext):
     if callback_data.main == "AddBot":
         text = "Чтобы подключить бот, вам нужно выполнить два действия:\n\n" \
                "1. Перейдите в @BotFather и создайте новый бот\n" \
@@ -74,6 +77,30 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback):
     elif callback_data.main == "StatisticsBot":
         pass
 
+    elif callback_data.main == "WelcomeText":
+        bot_id = int(callback_data.id)
+        await state.update_data(any_bot_id=bot_id)
+        get_bot = await CRUDBots.get(id=bot_id)
+        if get_bot:
+            welcome_txt = get_bot.welcome_text
+            if welcome_txt == "None":
+                await callback.message.edit_text(text="У вас не добавлен стартовый текст\n"
+                                                      "Желаете добавить новый?",
+                                                 reply_markup=await MyCallback.approve_ikb(user_id=callback.from_user.id,
+                                                                                           bot_id=bot_id)
+                                                 )
+            else:
+                await callback.message.edit_text(text="Ваш стартовый текст:\n\n"
+                                                      f"{welcome_txt}\n\n"
+                                                      f"Желеаете добавить новый?",
+                                                 reply_markup=await MyCallback.approve_ikb(user_id=callback.from_user.id,
+                                                                                           bot_id=bot_id)
+                                                 )
+        else:
+            await callback.message.edit_text(text="Бота не найдено!",
+                                             reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot")
+                                             )
+
     elif callback_data.main == "AddChat":
         bot_id = int(callback_data.id)
         get_bot = await CRUDBots.get(id=bot_id)
@@ -92,5 +119,12 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback):
                                                  reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot",
                                                                                                   bot_id=bot_id),
                                                  parse_mode="HTML")
+                print("yes")
         else:
             await callback.message.edit_text(text="Бот не найден!")
+
+    elif callback_data.main == "AddWelcomeTxt":
+        await callback.message.edit_text(text="Введите тест")
+        await state.set_state(UserStates.AddWelcomeTxt)
+
+
