@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Column, TIMESTAMP, VARCHAR, Integer, Boolean, Text, ForeignKey, CHAR, BigInteger, SmallInteger
+from sqlalchemy import Column, TIMESTAMP, DateTime, VARCHAR, Integer, Boolean, Text, ForeignKey, CHAR, BigInteger, \
+    SmallInteger
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -14,6 +15,7 @@ class User(Base):
     chat_id = Column(BigInteger)
     block = Column(Boolean)
     ban = Column(Boolean)
+    use_bot_id = Column(BigInteger)
 
 
 class BotTG(Base):
@@ -23,6 +25,8 @@ class BotTG(Base):
     user_id = Column(BigInteger)
     bot_id = Column(BigInteger)
     bot_token = Column(Text)
+    date_created = Column(TIMESTAMP, default=datetime.now())
+    welcome_text = Column(Text, default="None")
 
 
 class ChatBot(Base):
