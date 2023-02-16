@@ -7,3 +7,5 @@ class UserStates(StatesGroup):
 
     Newsletters = State()
     BlockedUser = State()
+
+    AddWelcomeTxt = State()
