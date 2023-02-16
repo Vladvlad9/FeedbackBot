@@ -26,7 +26,7 @@ class CRUDBots(object):
 
     @staticmethod
     @create_async_session
-    async def get(id:int = None,
+    async def get(id: int = None,
                   bot_id: int = None,
                   bot_token: str = None,
                   user_id: int = None,
