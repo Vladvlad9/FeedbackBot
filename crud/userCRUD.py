@@ -61,7 +61,7 @@ class CRUDUsers(object):
 
     @staticmethod
     @create_async_session
-    async def get_all(user_id: int = None, block: bool = None, ban: bool = None,
+    async def get_all(user_id: int = None, block: bool = None, ban: bool = None, bot_id: int = None,
                       session: AsyncSession = None) -> list[UserInDBSchema]:
         try:
             if user_id:
@@ -71,12 +71,17 @@ class CRUDUsers(object):
                 )
             elif block:
                 users = await session.execute(
-                    select(User).where(User.block == False)
+                    select(User).where(User.block == True)
                     .order_by(User.id)
                 )
             elif ban:
                 users = await session.execute(
                     select(User).where(User.ban == True)
+                    .order_by(User.id)
+                )
+            elif bot_id:
+                users = await session.execute(
+                    select(User).where(User.use_bot_id == bot_id)
                     .order_by(User.id)
                 )
             else:
