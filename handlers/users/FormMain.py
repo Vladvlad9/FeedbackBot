@@ -79,7 +79,13 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback, s
                                          )
 
     elif callback_data.main == "NewslettersBot":
-        pass
+        bot_id = int(callback_data.id)
+        text = "Введите сообщение которое хотите отправить пользователям"
+        await callback.message.edit_text(text=text,
+                                         reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot",
+                                                                                          bot_id=bot_id)
+                                         )
+        await state.set_state(UserStates.Newsletters)
 
     elif callback_data.main == "StatisticsBot":
         bot_id = int(callback_data.id)
