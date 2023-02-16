@@ -69,7 +69,14 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback, s
                                          reply_markup=await MyCallback.settings_current_bot(bot_id=bot_id))
 
     elif callback_data.main == "BlockedUser":
-        pass
+        bot_id = int(callback_data.id)
+        await callback.message.edit_text(text="Что бы забанить пользователя необходимо в чате нажать 'Ответить' "
+                                              "затем написать <i>/ban</i>\n\n"
+                                              "После чего пользователю будет запрещено писать в боте",
+                                         reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot",
+                                                                                          bot_id=bot_id),
+                                         parse_mode="HTML"
+                                         )
 
     elif callback_data.main == "NewslettersBot":
         pass
