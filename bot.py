@@ -218,37 +218,40 @@ async def echo(message: types.Message):
         get_bot = await CRUDBots.get(bot_id=bot.id)
         chat = await CRUDChats.get(bot_id=get_bot.bot_id)
         user = await CRUDUsers.get(user_id=message.from_user.id)
-        if not user.ban:
-            if not message.reply_to_message:
-                if user:
-                    if user.chat_id == 1:
-                        user.chat_id = chat.chat_id
-                        await CRUDUsers.update(user=user)
+        if user:
+            if not user.ban:
+                if not message.reply_to_message:
+                    if user:
+                        if user.chat_id == 1:
+                            user.chat_id = chat.chat_id
+                            await CRUDUsers.update(user=user)
 
-                        current_bot = Bot(token=get_bot.bot_token)
-                        await current_bot.forward_message(chat_id=chat.chat_id,
-                                                          from_chat_id=message.from_user.id,
-                                                          message_id=message.message_id)
+                            current_bot = Bot(token=get_bot.bot_token)
+                            await current_bot.forward_message(chat_id=chat.chat_id,
+                                                              from_chat_id=message.from_user.id,
+                                                              message_id=message.message_id)
+                        else:
+                            current_bot = Bot(token=get_bot.bot_token)
+                            await current_bot.forward_message(chat_id=chat.chat_id,
+                                                              from_chat_id=message.from_user.id,
+                                                              message_id=message.message_id)
+                            CONFIG.COUNTER.USER_MESSAGE += 1
                     else:
+                        await message.answer(text="Пользователя не найдено")
+                else:
+                    get_user_id = await CRUDUsers.get(user_id=message.reply_to_message.forward_from.id)
+                    if get_user_id:
                         current_bot = Bot(token=get_bot.bot_token)
-                        await current_bot.forward_message(chat_id=chat.chat_id,
-                                                          from_chat_id=message.from_user.id,
-                                                          message_id=message.message_id)
-                        CONFIG.COUNTER.USER_MESSAGE += 1
-                else:
-                    await message.answer(text="Пользователя не найдено")
+                        await current_bot.send_message(chat_id=message.reply_to_message.forward_from.id,
+                                                       text=message.text)
+                        CONFIG.COUNTER.ADMIN_MESSAGE += 1
+                    else:
+                        await message.answer(text="Пользователя не найдено")
             else:
-                get_user_id = await CRUDUsers.get(user_id=message.reply_to_message.forward_from.id)
-                if get_user_id:
-                    current_bot = Bot(token=get_bot.bot_token)
-                    await current_bot.send_message(chat_id=message.reply_to_message.forward_from.id,
-                                                   text=message.text)
-                    CONFIG.COUNTER.ADMIN_MESSAGE += 1
-                else:
-                    await message.answer(text="Пользователя не найдено")
+                await message.delete()
+                await message.answer(text="Вам Запрещено писать, вы находитесь в бане!")
         else:
-            await message.delete()
-            await message.answer(text="Вам Запрещено писать, вы находитесь в бане!")
+            await message.answer(text="Нажмите еще раз /start")
 
 
 async def on_bot_startup(bot: Bot):
