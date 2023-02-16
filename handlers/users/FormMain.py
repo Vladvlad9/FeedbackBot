@@ -75,7 +75,22 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback, s
         pass
 
     elif callback_data.main == "StatisticsBot":
-        pass
+        bot_id = int(callback_data.id)
+        get_bot = await CRUDBots.get(id=bot_id)
+        users = await CRUDUsers.get_all(bot_id=get_bot.bot_id)
+        get_ban_bot = await CRUDUsers.get_all(ban=True)
+        get_blocked_bot = await CRUDUsers.get_all(block=True)
+
+        text = "📈 Статистика бота\n\n" \
+               f"❗️ Количество человек в боте : {len(users)}\n" \
+               f"🚫 Количество забаненых в чате : {len(get_ban_bot)}\n" \
+               f"☠️ Количество человек которые удалили/остановили бота : {len(get_blocked_bot)}\n\n" \
+               f"<i>Счетчик тех, кто заблокировал бот, обновляется после каждой рассылки.</i>"
+
+        await callback.message.edit_text(text=text,
+                                         reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot",
+                                                                                          bot_id=bot_id),
+                                         parse_mode="HTML")
 
     elif callback_data.main == "WelcomeText":
         bot_id = int(callback_data.id)
@@ -111,7 +126,9 @@ async def main_forms(callback: types.CallbackQuery, callback_data: MyCallback, s
                                                       "поэтому все сообщения будут приходить в диалог с ботом.\n\n"
                                                       "Чтобы подключить чат — добавьте бот "
                                                       "как нового участника.",
-                                                 reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot"))
+                                                 reply_markup=await MyCallback.back_main_menu_ikb(target="ShowBot",
+                                                                                                  bot_id=bot_id)
+                                                 )
             else:
                 my_bot = Bot(token=get_bot.bot_token)
                 get_chat = await my_bot.get_chat(chat_id=f"<i>{get_chat_bot.chat_id}</i>")
